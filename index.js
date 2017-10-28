@@ -1,8 +1,9 @@
 const path = require("path");
 const Express = require("express");
 const Fs = require("fs");
-const Request = require("request");
+const Request = require("request-promise");
 const Cheerio = require("cheerio");
+const Url = require("url");
 const App = Express();
 
 const getTimestamp = () => {
@@ -21,75 +22,149 @@ const getTimestamp = () => {
 /**
  * @see https://scotch.io/tutorials/scraping-the-web-with-node-js
  */
-App.get("/", (req, res) => {
-	res.write();
-});
+// The URL we will scrape from - in our example Anchorman 2.
+const timestamp = getTimestamp();
+const file = path.resolve(__dirname, `output/test_${timestamp}.json`);
 
-App.get("/scan", (req, res) => {
-	// The URL we will scrape from - in our example Anchorman 2.
-	const url = "http://pesdb.net/pes2018/";
-	const timestamp = getTimestamp();
-	const file = path.resolve(__dirname, `output/test_${timestamp}.json`);
+// console.log(file);
 
-	// console.log(file);
+const options = {
+	url: "http://pesdb.net/pes2018/",
+	transform: function(body) {
+		return Cheerio.load(body);
+	}
+};
 
-	Request(url, function(error, response, html) {
-		// First we'll check to make sure no errors occurred when making the request
-		if (!error /* && !Fs.existsSync(file) */) {
-			// Next, we'll utilize the cheerio library on the returned html which will essentially give us jQuery functionality
+Request(options)
+	.then($ => {
+		const totalPages = $("div.pages a")
+			.last()
+			.text();
 
-			const $ = Cheerio.load(html);
+		console.log(`<p>Total Pages: ${totalPages}</p>`);
+		console.log("<hr />");
 
-			const rows = $("table.players tbody tr");
-
-			const json = [];
-
-			$(rows).each((i, row) => {
-				const columns = $($(row).find("td"));
-
-				/**
-                 * Skip columns without text
-                 */
-				if (!columns.eq(1).text()) {
-					return;
-				}
-
-				json.push({
-					position: columns.eq(0).text(),
-					name: columns.eq(1).text(),
-					team: columns.eq(2).text(),
-					nationality: columns.eq(3).text(),
-					height: columns.eq(4).text(),
-					weight: columns.eq(5).text(),
-					age: columns.eq(6).text(),
-					condition: columns.eq(7).text(),
-					rating: columns.eq(8).text()
-				});
-				let currentPage = 0;
-				res.write(`<p>Current Page: ${currentPage}</p>`);
+		/**
+             * Mock pages links
+             */
+		const pages = Array.apply(null, {
+			length: totalPages
+		})
+			.map((value, index) => {
+				if (index === 1) return options.url;
+				return Url.resolve(options.url, `?page=${index}`);
+			})
+			.filter((value, index) => {
+				if (index === 0) return;
+				return value;
 			});
+		/* 
+             */
 
-			const totalPages = $("div.pages a")
-				.last()
-				.text();
-			// const nextPage;
+		/** Cut the pages array for testing proposes */
+		// const fakePages = pages.slice(0, 3);
+		// const roster = [];
+		// console.log(fakePages);
 
-			// console.log(totalPages);
-			res.write(`<p>Total Pages: ${totalPages}</p>`);
-			res.write("<hr />");
-			res.write("<code>");
-			res.write(JSON.stringify(json));
-			res.write("</code>");
+		// Request.all(fakePages).then(htmls => {
+		// 	roster = htmls.map((html, currentPage) => {
+		// 		const $ = Cheerio.load(html);
 
-			res.end();
+		// 		const players = getRows(html, { currentPage });
+		// 		roster.push(players);
+		// 	});
+		// });
 
-			res.json(json);
-		}
+		const roster = pages.slice(0, 3).reduce((players, url, currentPage) => {
+			console.log(players, url, currentPage);
+			Request({
+				url,
+				transform: function(body) {
+					return Cheerio.load(body);
+				}
+			})
+				.then($ => {
+					const rows = getRows($, { currentPage });
+					// console.log(rows);
+					players.push(rows);
+					// console.log(players);
+					// players = players.concat(rows);
+				})
+				.catch(err => {
+					throw err;
+				});
+			// console.log(players);
+			return players;
+		}, []);
+
+		console.log("<h1>Roster</h1>");
+		// console.log(JSON.stringify(roster));
+	})
+	.catch(err => {
+		throw err;
 	});
-});
 
-App.listen(8081);
+const getRows = (html, { currentPage }) => {
+	const $ = html;
+	const rows = $("table.players tbody tr");
 
-console.log("Server listening in port 8081");
+	const result = [];
 
-module.export = App;
+	$(rows).each((i, row) => {
+		const columns = $($(row).find("td"));
+
+		/**
+         * Skip columns without text
+         */
+		if (!columns.eq(1).text()) {
+			return;
+		}
+
+		result.push({
+			position: columns.eq(0).text(),
+			name: columns.eq(1).text(),
+			id: getPlayerId(columns),
+			link: Url.resolve(
+				options.url,
+				columns
+					.eq(1)
+					.find("a")
+					.attr("href")
+			),
+			team: {
+				name: columns.eq(2).text(),
+				link: Url.resolve(
+					options.url,
+					columns
+						.eq(2)
+						.find("a")
+						.attr("href")
+				)
+			},
+			nationality: columns.eq(3).text(),
+			height: columns.eq(4).text(),
+			weight: columns.eq(5).text(),
+			age: columns.eq(6).text(),
+			condition: columns.eq(7).text(),
+			overalRating: columns.eq(8).text(),
+			rating: {},
+			meta: {
+				page: currentPage
+			}
+		});
+	});
+
+	return result;
+};
+
+const getPlayerId = columns => {
+	const href = columns
+		.eq(1)
+		.find("a")
+		.attr("href");
+	// TODO:
+	// Cut the string since `./?id=`
+	return "fakeId";
+};
+
+// module.export = App;

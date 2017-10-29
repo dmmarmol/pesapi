@@ -140,9 +140,9 @@ const getPlayers = () => {
 		Fs.writeFileSync(file, JSON.stringify(players), null, 4);
 		return players;
 	});
-};
 
-getPlayers();
+	return result;
+};
 
 const getRows = (html, { currentPage }) => {
 	const $ = html;
@@ -205,5 +205,7 @@ const getPlayerId = columns => {
 	const result = href.match(onlyNumbers);
 	return result.length ? result[0] : result;
 };
+
+getPlayers();
 
 // module.export = App;

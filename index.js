@@ -2,9 +2,13 @@ const path = require("path");
 const Express = require("express");
 const Fs = require("fs");
 const Request = require("request-promise");
+const Promise = require("bluebird");
 const Cheerio = require("cheerio");
 const Url = require("url");
+const _ = require("lodash");
 const App = Express();
+
+const debug = true;
 
 const getTimestamp = () => {
 	const today = new Date();
@@ -22,87 +26,123 @@ const getTimestamp = () => {
 /**
  * @see https://scotch.io/tutorials/scraping-the-web-with-node-js
  */
-// The URL we will scrape from - in our example Anchorman 2.
-const timestamp = getTimestamp();
-const file = path.resolve(__dirname, `output/test_${timestamp}.json`);
 
-// console.log(file);
-
-const options = {
-	url: "http://pesdb.net/pes2018/",
+const composeOptions = url => ({
+	url: Url.resolve(url, ""),
 	transform: function(body) {
 		return Cheerio.load(body);
 	}
+});
+
+const options = composeOptions("http://pesdb.net/pes2018/");
+
+const getPages = () => {
+	return new Promise((resolve, reject) => {
+		Request(options)
+			.then($ => {
+				const totalPages = $("div.pages a")
+					.last()
+					.text();
+				if (debug) {
+					console.log(`Total Pages: ${totalPages}`);
+				}
+
+				//  Mock pages links
+				const pages = Array.apply(null, {
+					length: totalPages
+				})
+					.map((value, index) => {
+						if (index === 1) return options.url;
+						return Url.resolve(options.url, `?page=${index}`);
+					})
+					.filter((value, index) => {
+						if (index === 0) return;
+						return value;
+					});
+				resolve(pages);
+			})
+			.catch(err => {
+				reject(err);
+			});
+	});
 };
 
-Request(options)
-	.then($ => {
-		const totalPages = $("div.pages a")
-			.last()
-			.text();
+const crawlPages = () => {
+	return getPages().then(pages => {
+		if (debug) {
+			console.log("======================================");
+			console.log("getPages");
+			console.log(pages.slice(0, 3), `and ${pages.length - 2} more...`);
+			console.log("======================================");
+		}
+		return Promise.all(
+			pages.slice(0, 3).map((url, index) => {
+				const options = composeOptions(url);
+				const currentPage = index + 1;
 
-		console.log(`<p>Total Pages: ${totalPages}</p>`);
-		console.log("<hr />");
-
-		/**
-             * Mock pages links
-             */
-		const pages = Array.apply(null, {
-			length: totalPages
-		})
-			.map((value, index) => {
-				if (index === 1) return options.url;
-				return Url.resolve(options.url, `?page=${index}`);
-			})
-			.filter((value, index) => {
-				if (index === 0) return;
-				return value;
-			});
-		/* 
-             */
-
-		/** Cut the pages array for testing proposes */
-		// const fakePages = pages.slice(0, 3);
-		// const roster = [];
-		// console.log(fakePages);
-
-		// Request.all(fakePages).then(htmls => {
-		// 	roster = htmls.map((html, currentPage) => {
-		// 		const $ = Cheerio.load(html);
-
-		// 		const players = getRows(html, { currentPage });
-		// 		roster.push(players);
-		// 	});
-		// });
-
-		const roster = pages.slice(0, 3).reduce((players, url, currentPage) => {
-			console.log(players, url, currentPage);
-			Request({
-				url,
-				transform: function(body) {
-					return Cheerio.load(body);
+				if (debug) {
+					console.log(`URL to fetch ${url}`);
 				}
-			})
-				.then($ => {
-					const rows = getRows($, { currentPage });
-					// console.log(rows);
-					players.push(rows);
-					// console.log(players);
-					// players = players.concat(rows);
-				})
-				.catch(err => {
-					throw err;
-				});
-			// console.log(players);
-			return players;
-		}, []);
 
-		console.log("<h1>Roster</h1>");
-		// console.log(JSON.stringify(roster));
-	})
-	.catch(err => {
-		throw err;
+				return Request(options).then($ => {
+					const rows = getRows($, {
+						currentPage
+					});
+					return rows;
+				});
+			})
+		)
+			.then(pages => {
+				const response = _.flatten(pages);
+				if (debug) {
+					console.log("======================================");
+					console.log(`Total response length: ${response.length}`);
+					console.log(
+						`First three names: ${response[0].name}, ${response[1]
+							.name} and ${response[2].name}`
+					);
+				}
+				return response;
+			})
+			.catch(err => {
+				throw err;
+			});
 	});
+};
+
+const getPlayers = () => {
+	const timestamp = getTimestamp();
+	const version = require("./package.json").version;
+	const dir = path.resolve(__dirname, `output/v${version}`);
+	const file = path.resolve(dir, `players_${timestamp}.json`);
+
+	const result = crawlPages().then(players => {
+		if (!Fs.existsSync(dir)) {
+			Fs.mkdirSync(dir);
+			if (debug) {
+				console.log("======================================");
+				console.log(`Creating directory in ${dir}`);
+			}
+		} else if (Fs.existsSync(file)) {
+			if (debug) {
+				console.log("======================================");
+				console.log(`File ${file} already exist`);
+			}
+			return;
+		}
+
+		if (debug) {
+			console.log("======================================");
+			console.log(
+				`Writing file in ${file} with ${players.length} players fetched`
+			);
+		}
+		Fs.writeFileSync(file, JSON.stringify(players), null, 4);
+		return players;
+	});
+};
+
+getPlayers();
 
 const getRows = (html, { currentPage }) => {
 	const $ = html;
@@ -113,9 +153,7 @@ const getRows = (html, { currentPage }) => {
 	$(rows).each((i, row) => {
 		const columns = $($(row).find("td"));
 
-		/**
-         * Skip columns without text
-         */
+		// Skip columns without text
 		if (!columns.eq(1).text()) {
 			return;
 		}
@@ -162,9 +200,10 @@ const getPlayerId = columns => {
 		.eq(1)
 		.find("a")
 		.attr("href");
-	// TODO:
-	// Cut the string since `./?id=`
-	return "fakeId";
+	const onlyNumbers = /\d+/g;
+	// Get only numbers from `./?id=4522`
+	const result = href.match(onlyNumbers);
+	return result.length ? result[0] : result;
 };
 
 // module.export = App;

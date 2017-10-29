@@ -1,13 +1,10 @@
 const path = require("path");
-const Express = require("express");
 const Fs = require("fs");
 const Request = require("request-promise");
 const Promise = require("bluebird");
 const Cheerio = require("cheerio");
 const Url = require("url");
 const _ = require("lodash");
-const App = Express();
-
 const debug = true;
 
 const getTimestamp = () => {
@@ -207,5 +204,3 @@ const getPlayerId = columns => {
 };
 
 getPlayers();
-
-// module.export = App;

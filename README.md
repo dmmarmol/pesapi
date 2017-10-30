@@ -8,3 +8,20 @@ This project was indented to be a proof of concept involving web scrapping and m
 ### References
 - [Scrapping the web with node.js](https://scotch.io/tutorials/scraping-the-web-with-node-js)
 - [Using `Promise.all` to resolve multiple request](https://stackoverflow.com/questions/45389677/using-promise-all-to-resolve-fetch-requests)
+
+
+### Install
+
+Clone this project and `cd` into it and run
+
+#### If you have [Yarn](https://yarnpkg.com/)
+```
+yarn && yarn start 
+```
+
+#### If not, then classic `npm install`
+```
+npm install && npm run start
+```
+
+At this moment the gathered information should be placed inside an `./output` directory and inside a sub directory with the corresponding version name. Eg.: `./output/v0.0.2/players_...`

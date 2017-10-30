@@ -1,9 +1,16 @@
 {
-    "presets": ["react-app"],
-    "plugins": [
-        "transform-class-properties",
-        "transform-decorators-legacy",
-        "transform-object-rest-spread",
-        "transform-runtime"
-    ]
+	"presets": [
+		// "es2016",
+		"es2015",
+		"stage-1"
+		// "react-app"
+	],
+	"plugins": [
+		"transform-class-properties",
+		"transform-decorators-legacy",
+		"transform-object-rest-spread",
+		"transform-runtime",
+		"transform-imports",
+		"dynamic-import-node"
+	]
 }

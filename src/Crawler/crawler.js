@@ -1,11 +1,12 @@
 const Cheerio = require("cheerio");
 const Fs = require("fs");
-const JSON = require("babel-runtime/core-js/json/stringify");
+// const JSON = require("babel-runtime/core-js/json/stringify");
 const Promise = require("bluebird");
 const Request = require("request-promise");
 const Url = require("url");
 const _ = require("lodash");
 const path = require("path");
+const Config = require("../../../config/config");
 
 /**
  * @see https://scotch.io/tutorials/scraping-the-web-with-node-js
@@ -130,16 +131,16 @@ class Crawler {
 	getPlayers() {
 		const fileName = this.getFilename();
 		const version = require("./../../../package.json").version;
-		const dir = path.resolve(__dirname, `output/v${version}`);
+		const dir = path.resolve(Config.output, `v${version}`);
 		const file = path.resolve(dir, `players_${fileName}.json`);
 
 		const result = this.crawlPages().then(players => {
 			if (!Fs.existsSync(dir)) {
-				Fs.mkdirSync(dir);
 				if (this.debug) {
 					console.log("======================================");
 					console.log(`Creating directory in ${dir}`);
 				}
+				Fs.mkdirSync(dir);
 			} else if (Fs.existsSync(file)) {
 				if (this.debug) {
 					console.log("======================================");

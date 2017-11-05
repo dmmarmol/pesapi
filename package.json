@@ -1,14 +1,16 @@
 {
 	"name": "pesapi",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"description": "PES database API in Node.js (test)",
 	"main": "index.js",
 	"author": "Diego Martin Marmol <diegomartinmarmol@gmail.com>",
 	"license": "MIT",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"build": "rimraf dist/ && babel ./index.js ./src/**/*.js --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files",
-		"start": "cross-env NODE_ENV=development yarn build && node dist/index.js"
+		"build":
+			"rimraf dist/ && babel ./index.js ./src/**/*.js --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files",
+		"start":
+			"cross-env NODE_ENV=development yarn build && node dist/index.js"
 	},
 	"dependencies": {
 		"bluebird": "3.5.1",

@@ -135,31 +135,28 @@ class Crawler {
 						});
 
 						// return rows;
-						// TODO:
-						// Merge this result with `rows`
-						return this.crawlPlayerProfile(rows);
+						const players = this.crawlPlayerProfile(rows);
+						return players;
 					});
 				})
 			)
-				.then(pages => {
-					const response = _.flatten(pages);
-					if (this.debug) {
-						console.log("======================================");
-						console.log(response);
+				.then(players => {
+					const response = _.flatten(players);
 
-						/**
-                         * const allIds = response.map(player => player.id);
-                         * this.setState({ allIds })
-                         */
-						// console.log(
-						// 	`Total response length: ${response.length}`
-						// );
-						// console.log(
-						// 	`First three names: ${response[0]
-						// 		.name}, ${response[1].name} and ${response[2]
-						// 		.name}`
-						// );
-					}
+					/**
+                     * Save id's con the class state
+                     */
+					const allIds = response.map(player => player.id);
+					this.setState({ allIds });
+
+					console.log("======================================");
+					console.log(`Total response length: ${response.length}`);
+					console.log("First three names");
+					response
+						.slice(0, 2)
+						.forEach(player =>
+							console.log(`${player.id} | ${player.name}`)
+						);
 					return response;
 				})
 				.catch(err => {
@@ -174,19 +171,15 @@ class Crawler {
      */
 	crawlPlayerProfile(rows) {
 		return new Promise.all(
-			rows.slice(0, 1).map(player => {
+			rows.slice(0, 3).map(player => {
 				const options = this.composeOptions(player.link);
 
-				Request(options).then($ => {
+				return Request(options).then($ => {
 					const statsRow = $("table.player tbody tr").first();
-					// console.log("======================================");
-					// console.log(`Stats Row: ${statsRow}`);
 					// Remove the last column (player skills)
 					const columns = $(statsRow)
 						.children("td")
 						.slice(0, 3);
-					// console.log("======================================");
-					// console.log(`Columns: ${columns.length}`);
 					// TODO: Iterate this column on a diferent way
 					const skillsColumn = $(statsRow)
 						.children("td")
@@ -196,23 +189,10 @@ class Crawler {
 					$(columns).each((i, column) => {
 						const table = $(column).find("table tbody");
 						const rows = $(table).children("tr");
-						// console.log("======================================");
-						// console.log(`Table (columns): ${table}`);
-						// console.log(`Rows: ${rows}`);
 						/**
                          * Iterate over each player stat
                          */
-						rows.map((j, row) => {
-							/**
-                             * 'Rating as' is treated different
-                             */
-							if (
-								i === columns.length - 1 &&
-								j === rows.length - 1
-							) {
-								return;
-							}
-
+						rows.each((j, row) => {
 							let rowLabel = $(row)
 								.children("th")
 								.text();
@@ -233,24 +213,24 @@ class Crawler {
 							if (utils.isNumeric(rowValue)) {
 								rowValue = +rowValue;
 							}
-							console.log(
-								`Label: ${rowLabel} | Value: ${rowValue}`
-							);
+
+							if (
+								i === columns.length - 1 &&
+								j === rows.length - 1
+							) {
+								const ratingAs = this.getRatingAs($, row);
+								stats.as = ratingAs;
+								return;
+							}
+
 							stats[rowLabel] = rowValue;
 						});
 					});
 					player.stats = stats;
-					if (this.debug) {
-						console.log(player);
-					}
+					return player;
 				});
 			})
 		).then(playersProfile => {
-			if (this.debug) {
-				console.log("======================================");
-				console.log("Players profile");
-				console.log(playersProfile);
-			}
 			return playersProfile;
 		});
 	}
@@ -326,11 +306,11 @@ class Crawler {
 					)
 				},
 				nationality: columns.eq(3).text(),
-				height: columns.eq(4).text(),
-				weight: columns.eq(5).text(),
-				age: columns.eq(6).text(),
-				condition: columns.eq(7).text(),
-				overalRating: columns.eq(8).text(),
+				height: utils.makeNumeric(columns.eq(4).text()),
+				weight: utils.makeNumeric(columns.eq(5).text()),
+				age: utils.makeNumeric(columns.eq(6).text()),
+				condition: utils.makeNumeric(columns.eq(7).text()),
+				overalRating: utils.makeNumeric(columns.eq(8).text()),
 				stats: {},
 				meta: {
 					page: currentPage
@@ -348,8 +328,27 @@ class Crawler {
 			.attr("href");
 		const onlyNumbers = /\d+/g;
 		// Get only numbers from `./?id=4522`
-		const result = href.match(onlyNumbers);
+		let result = href.match(onlyNumbers);
+		result = utils.makeNumeric(result);
 		return result.length ? result[0] : result;
+	}
+
+	/**
+     * 'Rating as' is treated different
+     */
+	getRatingAs($, row) {
+		const options = $(row)
+			.find("#select_rating_as")
+			.children("option");
+		const ratingAs = {};
+		options.each((k, option) => {
+			const valueAttr = $(option).attr("value");
+			let value = $(valueAttr).text();
+			const label = $(option).text();
+			value = utils.makeNumeric(value);
+			ratingAs[label] = value;
+		});
+		return ratingAs;
 	}
 }
 

@@ -9,3 +9,10 @@ export function camelize(str) {
 export function isNumeric(num) {
 	return !isNaN(num);
 }
+
+export function makeNumeric(num) {
+	if (!isNumeric(num)) {
+		return +num;
+	}
+	return num;
+}

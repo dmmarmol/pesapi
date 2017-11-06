@@ -10,6 +10,8 @@ const Config = require("../../../config/config");
 
 const utils = require("../utils");
 
+const DEBUG = true;
+
 /**
  * @see https://scotch.io/tutorials/scraping-the-web-with-node-js
  */
@@ -17,7 +19,6 @@ class Crawler {
 	constructor() {
 		this.baseUrl = "http://pesdb.net/pes2018/";
 		this.baseOptions = this.composeOptions(this.baseUrl);
-		this.debug = true;
 
 		this.state = {
 			byIds: {},
@@ -82,7 +83,7 @@ class Crawler {
 					const totalPages = $("div.pages a")
 						.last()
 						.text();
-					if (this.debug) {
+					if (DEBUG) {
 						console.log(`Total Pages: ${totalPages}`);
 					}
 
@@ -111,21 +112,20 @@ class Crawler {
      */
 	crawlPages() {
 		return this.getPages().then(pages => {
-			if (this.debug) {
+			if (DEBUG) {
 				console.log("======================================");
 				console.log("getPages");
 				console.log(
 					pages.slice(0, 3),
 					`and ${pages.length - 2} more...`
 				);
-				console.log("======================================");
 			}
 			return Promise.all(
 				pages.slice(0, 1).map((url, index) => {
 					const options = this.composeOptions(url);
 					const currentPage = index + 1;
 
-					if (this.debug) {
+					if (DEBUG) {
 						console.log(`URL to fetch ${url}`);
 					}
 
@@ -133,8 +133,6 @@ class Crawler {
 						const rows = this.getRows($, {
 							currentPage
 						});
-
-						// return rows;
 						const players = this.crawlPlayerProfile(rows);
 						return players;
 					});
@@ -151,12 +149,14 @@ class Crawler {
 
 					console.log("======================================");
 					console.log(`Total response length: ${response.length}`);
-					console.log("First three names");
-					response
-						.slice(0, 2)
-						.forEach(player =>
-							console.log(`${player.id} | ${player.name}`)
-						);
+					if (DEBUG) {
+						console.log("First three names");
+						response
+							.slice(0, 2)
+							.forEach(player =>
+								console.log(`${player.id} | ${player.name}`)
+							);
+					}
 					return response;
 				})
 				.catch(err => {
@@ -170,8 +170,12 @@ class Crawler {
      * @param {Players[]} rows 
      */
 	crawlPlayerProfile(rows) {
+		const players = rows;
+		if (DEBUG) {
+			players = rows.slice(0, 3);
+		}
 		return new Promise.all(
-			rows.slice(0, 3).map(player => {
+			players.map(player => {
 				const options = this.composeOptions(player.link);
 
 				return Request(options).then($ => {
@@ -244,25 +248,19 @@ class Crawler {
 
 		const result = pages.then(players => {
 			if (!Fs.existsSync(dir)) {
-				if (this.debug) {
-					console.log("======================================");
-					console.log(`Creating directory in ${dir}`);
-				}
+				console.log("======================================");
+				console.log(`Creating directory in ${dir}`);
 				Fs.mkdirSync(dir);
 			} else if (Fs.existsSync(file)) {
-				if (this.debug) {
-					console.log("======================================");
-					console.log(`File ${file} already exist`);
-				}
+				console.log("======================================");
+				console.log(`File ${file} already exist`);
 				return;
 			}
 
-			if (this.debug) {
-				console.log("======================================");
-				console.log(
-					`Writing file in ${file} with ${players.length} players fetched`
-				);
-			}
+			console.log("======================================");
+			console.log(
+				`Writing file in ${file} with ${players.length} players fetched`
+			);
 			Fs.writeFileSync(file, JSON.stringify(players), null, 4);
 			return players;
 		});

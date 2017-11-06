@@ -152,7 +152,7 @@ class Crawler {
 					if (DEBUG) {
 						console.log("First three names");
 						response
-							.slice(0, 2)
+							.slice(0, 3)
 							.forEach(player =>
 								console.log(`${player.id} | ${player.name}`)
 							);
@@ -170,7 +170,7 @@ class Crawler {
      * @param {Players[]} rows 
      */
 	crawlPlayerProfile(rows) {
-		const players = rows;
+		let players = rows;
 		if (DEBUG) {
 			players = rows.slice(0, 3);
 		}

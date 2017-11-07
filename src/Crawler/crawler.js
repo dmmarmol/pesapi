@@ -3,6 +3,7 @@ const Fs = require("fs");
 // const JSON = require("babel-runtime/core-js/json/stringify");
 const Promise = require("bluebird");
 const Request = require("request-promise");
+const ProgressBar = require("progress");
 const Url = require("url");
 const _ = require("lodash");
 const path = require("path");
@@ -11,6 +12,7 @@ const Config = require("../../../config/config");
 const utils = require("../utils");
 
 const DEBUG = true;
+const MAX_PAGES = 3;
 
 /**
  * @see https://scotch.io/tutorials/scraping-the-web-with-node-js
@@ -116,24 +118,33 @@ class Crawler {
 				console.log("======================================");
 				console.log("getPages");
 				console.log(
-					pages.slice(0, 3),
+					pages.slice(0, MAX_PAGES),
 					`and ${pages.length - 2} more...`
 				);
 			}
+			const progress = new ProgressBar(":bar", {
+				total: DEBUG ? MAX_PAGES : pages.length
+			});
+
 			return Promise.all(
-				pages.slice(0, 1).map((url, index) => {
+				pages.slice(0, MAX_PAGES).map((url, index) => {
 					const options = this.composeOptions(url);
 					const currentPage = index + 1;
 
 					if (DEBUG) {
+						console.log("======================================");
 						console.log(`URL to fetch ${url}`);
 					}
+					progress.tick();
 
 					return Request(options).then($ => {
 						const rows = this.getRows($, {
 							currentPage
 						});
 						const players = this.crawlPlayerProfile(rows);
+						if (progress.complete) {
+							console.log(`Pages Crawled ${index}`);
+						}
 						return players;
 					});
 				})
@@ -152,7 +163,7 @@ class Crawler {
 					if (DEBUG) {
 						console.log("First three names");
 						response
-							.slice(0, 3)
+							.slice(0, MAX_PAGES)
 							.forEach(player =>
 								console.log(`${player.id} | ${player.name}`)
 							);
@@ -172,7 +183,7 @@ class Crawler {
 	crawlPlayerProfile(rows) {
 		let players = rows;
 		if (DEBUG) {
-			players = rows.slice(0, 3);
+			players = rows.slice(0, MAX_PAGES);
 		}
 		return new Promise.all(
 			players.map(player => {

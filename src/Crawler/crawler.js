@@ -13,6 +13,7 @@ const utils = require("../utils");
 
 const DEBUG = true;
 const MAX_PAGES = 3;
+const CONCURRENCY = 1;
 
 /**
  * @see https://scotch.io/tutorials/scraping-the-web-with-node-js
@@ -32,7 +33,58 @@ class Crawler {
 	}
 
 	init() {
-		this.getPlayers();
+		// this.savePlayers();
+
+		const players = new Promise((resolve, reject) => {
+			const pages = this.getPages();
+			/**
+             * Set the progress bar
+             */
+			this.progress = new ProgressBar("Fetching [:bar] :rate/bps :percent :etas", {
+				total: DEBUG ? MAX_PAGES : pages.length,
+
+				complete: "=",
+				incomplete: " ",
+				width: 20
+			});
+			resolve(pages);
+		})
+			.then(response => {
+				const pages = DEBUG ? response.slice(0, MAX_PAGES) : response;
+
+				return Promise.mapSeries(pages, (page, index) => {
+					if (DEBUG) {
+						console.log("======================================");
+						console.log(`${pages} and ${pages.length - 2} more...`);
+					}
+					return this.crawlPage(page, index);
+				})
+					.then(response => {
+						const players = _.flatten(response);
+						console.log("======================================");
+						console.log(`Total players length: ${players.length}`);
+						if (DEBUG) {
+							players.forEach(p => console.log(p.name));
+						}
+						return players;
+					})
+					.then(players => {
+						this.savePlayers(players);
+					});
+
+				/**
+                 * 1. getPages() - OK
+                 * 2. crawlPages() - OK
+                 * 3.1 getRows() - OK
+                 * 3.1.1 getPlayerId() - OK
+                 * 3.2 crawlPlayerProfile() - OK
+                 * 3.2.1 getRatingAs() - OK
+                 * 4. savePlayers() - OK
+                 */
+			})
+			.catch(err => {
+				throw err;
+			});
 	}
 
 	/**
@@ -79,100 +131,56 @@ class Crawler {
 	getPages() {
 		const options = this.composeOptions(this.baseUrl);
 
-		return new Promise((resolve, reject) => {
-			Request(options)
-				.then($ => {
-					const totalPages = $("div.pages a")
-						.last()
-						.text();
-					if (DEBUG) {
-						console.log(`Total Pages: ${totalPages}`);
-					}
+		return Request(options)
+			.then($ => {
+				const totalPages = $("div.pages a")
+					.last()
+					.text();
+				if (DEBUG) {
+					console.log(`Total Pages: ${totalPages}`);
+				}
 
-					//  Mock pages links
-					const pages = Array.apply(null, {
-						length: totalPages
-					})
-						.map((value, index) => {
-							if (index === 1) return options.url;
-							return Url.resolve(options.url, `?page=${index}`);
-						})
-						.filter((value, index) => {
-							if (index === 0) return;
-							return value;
-						});
-					resolve(pages);
+				//  Mock pages links
+				const pages = Array.apply(null, {
+					length: totalPages
 				})
-				.catch(err => {
-					reject(err);
-				});
-		});
+					.map((value, index) => {
+						if (index === 1) return options.url;
+						return Url.resolve(options.url, `?page=${index}`);
+					})
+					.filter((value, index) => {
+						if (index === 0) return;
+						return value;
+					});
+				return pages;
+			})
+			.catch(err => {
+				throw err;
+			});
 	}
 
 	/**
      * Crawl Players rows
      */
-	crawlPages() {
-		return this.getPages().then(pages => {
-			if (DEBUG) {
-				console.log("======================================");
-				console.log("getPages");
-				console.log(
-					pages.slice(0, MAX_PAGES),
-					`and ${pages.length - 2} more...`
-				);
-			}
-			const progress = new ProgressBar(":bar", {
-				total: DEBUG ? MAX_PAGES : pages.length
+	crawlPage(url, index) {
+		const options = this.composeOptions(url);
+		const currentPage = index + 1;
+
+		if (DEBUG) {
+			console.log("======================================");
+			console.log(`URL to fetch ${url}`);
+		}
+		this.progress.tick();
+
+		return Request(options).then($ => {
+			const rows = this.getRows($, {
+				currentPage
 			});
-
-			return Promise.all(
-				pages.slice(0, MAX_PAGES).map((url, index) => {
-					const options = this.composeOptions(url);
-					const currentPage = index + 1;
-
-					if (DEBUG) {
-						console.log("======================================");
-						console.log(`URL to fetch ${url}`);
-					}
-					progress.tick();
-
-					return Request(options).then($ => {
-						const rows = this.getRows($, {
-							currentPage
-						});
-						const players = this.crawlPlayerProfile(rows);
-						if (progress.complete) {
-							console.log(`Pages Crawled ${index}`);
-						}
-						return players;
-					});
-				})
-			)
-				.then(players => {
-					const response = _.flatten(players);
-
-					/**
-                     * Save id's con the class state
-                     */
-					const allIds = response.map(player => player.id);
-					this.setState({ allIds });
-
-					console.log("======================================");
-					console.log(`Total response length: ${response.length}`);
-					if (DEBUG) {
-						console.log("First three names");
-						response
-							.slice(0, MAX_PAGES)
-							.forEach(player =>
-								console.log(`${player.id} | ${player.name}`)
-							);
-					}
-					return response;
-				})
-				.catch(err => {
-					throw err;
-				});
+			const players = this.crawlPlayerProfile(rows);
+			if (this.progress.complete) {
+				console.log(`Pages Crawled ${index}`);
+			}
+			return players;
 		});
 	}
 
@@ -182,9 +190,7 @@ class Crawler {
      */
 	crawlPlayerProfile(rows) {
 		let players = rows;
-		if (DEBUG) {
-			players = rows.slice(0, MAX_PAGES);
-		}
+		players = DEBUG ? rows.slice(0, MAX_PAGES) : rows;
 		return new Promise.all(
 			players.map(player => {
 				const options = this.composeOptions(player.link);
@@ -216,10 +222,7 @@ class Crawler {
 								return;
 							}
 							if (rowLabel[rowLabel.length - 1] === ":") {
-								rowLabel = rowLabel.slice(
-									0,
-									rowLabel.length - 1
-								);
+								rowLabel = rowLabel.slice(0, rowLabel.length - 1);
 							}
 
 							let rowValue = $(row)
@@ -229,10 +232,7 @@ class Crawler {
 								rowValue = +rowValue;
 							}
 
-							if (
-								i === columns.length - 1 &&
-								j === rows.length - 1
-							) {
+							if (i === columns.length - 1 && j === rows.length - 1) {
 								const ratingAs = this.getRatingAs($, row);
 								stats.as = ratingAs;
 								return;
@@ -250,35 +250,33 @@ class Crawler {
 		});
 	}
 
-	getPlayers() {
+	/**
+     * Write the crawled result into a .json file
+     */
+	savePlayers(players) {
 		const fileName = this.getFilename();
 		const version = require("./../../../package.json").version;
 		const dir = path.resolve(Config.output, `v${version}`);
 		const file = path.resolve(dir, `players_${fileName}.json`);
-		const pages = this.crawlPages();
 
-		const result = pages.then(players => {
-			if (!Fs.existsSync(dir)) {
-				console.log("======================================");
-				console.log(`Creating directory in ${dir}`);
-				Fs.mkdirSync(dir);
-			} else if (Fs.existsSync(file)) {
-				console.log("======================================");
-				console.log(`File ${file} already exist`);
-				return;
-			}
-
+		if (!Fs.existsSync(dir)) {
 			console.log("======================================");
-			console.log(
-				`Writing file in ${file} with ${players.length} players fetched`
-			);
-			Fs.writeFileSync(file, JSON.stringify(players), null, 4);
-			return players;
-		});
+			console.log(`Creating directory in ${dir}`);
+			Fs.mkdirSync(dir);
+		} else if (Fs.existsSync(file)) {
+			console.log("======================================");
+			console.log(`File ${file} already exist`);
+			return;
+		}
 
-		return result;
+		console.log("======================================");
+		console.log(`Writing file in ${file} with ${players.length} players fetched`);
+		Fs.writeFileSync(file, JSON.stringify(players), null, 4);
 	}
 
+	/**
+     * Get data of each row of players on the list
+     */
 	getRows(html, { currentPage }) {
 		const $ = html;
 		const rows = $("table.players tbody tr");
@@ -330,6 +328,9 @@ class Crawler {
 		return result;
 	}
 
+	/**
+     * Get Player.id from the URL
+     */
 	getPlayerId(columns) {
 		const href = columns
 			.eq(1)
@@ -343,7 +344,7 @@ class Crawler {
 	}
 
 	/**
-     * 'Rating as' is treated different
+     * Because 'Rating as' it's a <select> tag, it needs to be treated differently
      */
 	getRatingAs($, row) {
 		const options = $(row)

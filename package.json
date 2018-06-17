@@ -8,9 +8,9 @@
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
 		"build":
-			"rimraf dist/ && babel ./index.js ./src/**/*.js --out-dir dist/ --ignore ./node_modules,./.babelrc,./package.json,./npm-debug.log --copy-files",
-		"start":
-			"cross-env NODE_ENV=development yarn build && node dist/index.js"
+			"rimraf dist/ && babel ./index.js ./src/**/*.js --out-dir dist/ --ignore ./node_modules,./.babelrc,./npm-debug.log --copy-files",
+		"copyPackageJson": "cp package.json dist/",
+		"start": "cross-env NODE_ENV=development yarn build && node dist/index.js"
 	},
 	"dependencies": {
 		"bluebird": "3.5.1",
@@ -20,7 +20,8 @@
 		"node-progress": "0.1.0",
 		"request": "2.83.0",
 		"request-promise": "4.2.2",
-		"url": "0.11.0"
+		"url": "0.11.0",
+		"website-scraper": "^3.3.2"
 	},
 	"devDependencies": {
 		"babel-cli": "6.26.0",

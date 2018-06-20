@@ -13,6 +13,7 @@
     },
     "dependencies": {
         "bluebird": "3.5.1",
+        "chalk": "^2.4.1",
         "cheerio": "1.0.0-rc.2",
         "express": "4.16.2",
         "lodash": "4.17.4",

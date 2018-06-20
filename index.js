@@ -1,53 +1,20 @@
 require("babel-core");
 const path = require("path");
 const config = require("./src/config");
+const _ = require('lodash');
+const chalk = require('chalk');
 const request = require('request-promise');
 const cheerio = require('cheerio').load;
 const queryString = require('query-string');
+// Custom Modules
+const crawlPlayers = require('./src/crawlPlayers/crawlPlayers.func');
 
-function getPlayerValues(index) {
-    return request(config.BASE_URL)
-        .then(function (htmlString) {
-            const $ = cheerio(htmlString);
-            const table = $('table.players');
-            console.log('index', index);
 
-            /**
-             * Process html...
-             */
-            const rows = table.find('tbody tr').toArray();
-            const players = rows.slice(1, rows.length);
-            // console.log(players);
-            const statsRow = rows[0];
-
-            // Remove the last column (player skills)
-            const columns = $(statsRow)
-                .children("td")
-                .slice(0, 3);
-            // TODO: Iterate this column on a diferent way
-            const skillsColumn = $(statsRow)
-                .children("td")
-                .last();
-            // Collect the player stats
-            // console.log(players);
-            const values = players.reduce((acc, row) => {
-                const player = getRowValues($, row);
-                // console.log(player);
-                acc[j] = player;
-                return acc;
-            }, {});
-            return values;
-        })
-        .catch(function (err) {
-            // Crawling failed...
-            console.log('err')
-        });
-}
 
 async function go() {
     try {
-        const players = await getPlayerValues(1);
-        console.log(players);
+        const players = await crawlPlayers.getPlayerValues(1);
+        console.log('@await done', players);
         // const coffee2 = await getPlayerValues(2);
         // console.log(coffee2); // ☕
         // const coffee3 = await getPlayerValues(3);
@@ -59,17 +26,7 @@ async function go() {
 
 go();
 
-function getRowValues($, row) {
-    console.log('======================');
-    console.log('Get Players row values');
-    return row.children.map(column => {
-        const col = $(column);
-        // const href = col.children().attr('href');
 
-        // console.log(col.text());
-        return col.text();
-    });
-}
 
 function getPlayerStatsOld(column) {
     $(column).find("table tbody");

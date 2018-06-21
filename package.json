@@ -12,17 +12,16 @@
         "start": "cross-env NODE_ENV=development yarn build && node dist/index.js"
     },
     "dependencies": {
-        "bluebird": "3.5.1",
+        "bluebird": "^3.5.1",
         "chalk": "^2.4.1",
         "cheerio": "1.0.0-rc.2",
         "express": "4.16.2",
         "lodash": "4.17.4",
-        "node-progress": "0.1.0",
+        "multi-progress": "^2.0.0",
         "query-string": "6.1.0",
         "request": "2.83.0",
         "request-promise": "4.2.2",
-        "url": "0.11.0",
-        "website-scraper": "3.3.2"
+        "url": "0.11.0"
     },
     "devDependencies": {
         "babel-cli": "6.26.0",

@@ -1,4 +1,6 @@
 const _ = require('lodash');
+const chalk = require('chalk');
+const config = require('./config');
 
 // function camelize(str) {
 //     return str
@@ -19,8 +21,17 @@ const _ = require('lodash');
 //     return num;
 // }
 
+const getPageUrl = (pageNumber) => {
+    const index = pageNumber <= 0 || !pageNumber ? 1 : pageNumber;
+    const url = index !== 1 ? `${config.BASE_URL}?page=${pageNumber}` : config.BASE_URL;
+    return url;
+};
+const getPlayerUrl = (playerId) => {
+    return `${config.BASE_URL}?id=${playerId}`
+}
+
 /**
- * Logea en colors
+ * Logea en colores
  */
 const log = {
     white: (value, ...args) => console.log(
@@ -28,11 +39,15 @@ const log = {
         chalk.black.bgWhite(...args)
     ),
     red: (value, ...args) => console.log(
-        `${chalk.whiteBright.bgRed(value)}:`,
+        chalk.whiteBright.bgRed(`${value}:`),
         chalk.whiteBright.bgRed(...args)
     ),
+    green: (value, ...args) => console.log(
+        chalk.whiteBright.bgGreen(`${value}:`),
+        chalk.whiteBright.bgGreen(...args)
+    ),
     blue: (value, ...args) => console.log(
-        `${chalk.whiteBright.bgBlue(value)}:`,
+        chalk.whiteBright.bgBlue(`${value}:`),
         chalk.whiteBright.bgBlue(...args)
     ),
 }
@@ -78,6 +93,8 @@ module.exports = {
     // camelize,
     // isNumeric,
     // makeNumeric,
+    getPageUrl,
+    getPlayerUrl,
     log,
     getValuesFromQueryString,
 }

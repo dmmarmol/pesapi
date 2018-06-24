@@ -20,7 +20,7 @@ async function go() {
          * con todas las urls de las paginas
          */
         const pagesUrl = await crawlPages.getListOfPagesUrl();
-        console.log('@pagesUrl', pagesUrl);
+        // console.log('@pagesUrl', pagesUrl);
         /**
          * 2.
          * Crea una promesa por cada `pageUrl` donde se trae la informacion
@@ -29,16 +29,17 @@ async function go() {
         /* const allPagesRequest =  */
         // await Promise.mapSeries(pagesUrl, crawlPlayers.getPlayersFromPage)
         const playersFromPage = await Promise.mapSeries(pagesUrl, crawlPlayers.getPlayersFromPage)
-            /**
-             * 3.
-             * Luego, debe hacer fetch a cada una de las paginas de cada jugador
-             * dentro de esa pagina (2.)
-             */
-            .then(response => {
-                // console.log('@allPagesRequest', _.flatten(response));
-                return _.flatten(response);
-            });
-        console.log('@playersFromPage', playersFromPage);
+        /**
+         * 3.
+         * Luego, debe hacer fetch a cada una de las paginas de cada jugador
+         * dentro de esa pagina (2.)
+         */
+        // .then(response => {
+        //     // console.log('@allPagesRequest', _.flatten(response));
+        //     return _.flatten(response);
+        // });
+        const Allplayers = _.flatten(playersFromPage);
+        console.log('@Allplayers', Allplayers);
         // await Promise.all(allPagesRequest).then(
         //     response => {
         //         utils.log.green('@then');

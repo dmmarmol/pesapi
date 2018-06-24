@@ -5,6 +5,7 @@ const progress = require('multi-progress');
 const fetch = require('../fetch');
 const config = require("../config");
 const utils = require('../utils');
+const getPlayersSchema = require('./playerSchema');
 
 
 const columnMapping = {
@@ -21,7 +22,7 @@ const columnMapping = {
 
 function getRowValues($, row) {
     // console.log($(row.children[1]).text());
-    utils.log.blue(`> Getting Player: ${$(row.children[1]).text()} row values`);
+    utils.log.blue(`> Getting Player: ${$(row.children[1]).text()} from row`);
     const columns = row.children.reduce((player, column, colIndex) => {
         // console.log(column);
         const col = $(column);
@@ -69,7 +70,7 @@ async function getPlayersUrlsFromPage(url) {
          * Process html...
          */
         const rows = table.find('tbody tr').toArray();
-        const maxPlayers = config.DEBUG ? 3 : rows.length;
+        const maxPlayers = config.DEBUG ? config.MAX_PLAYERS_PER_PAGE + 1 : rows.length;
         const players = rows.slice(1, maxPlayers);
         // console.log(players);
         const statsRow = rows[0];
@@ -97,7 +98,7 @@ async function getPlayersUrlsFromPage(url) {
 
 async function getPlayersFromPage(pageUrl) {
     const playersUrl = await getPlayersUrlsFromPage(pageUrl) || [];
-    // console.log('@playersUrl', playersUrl);
+    console.log('@playersUrl', playersUrl);
     // return;
     /**
      * EN:
@@ -107,17 +108,18 @@ async function getPlayersFromPage(pageUrl) {
      * Mapea el array de playersUlr y devuelve una promesa con delay por cada item
      * donde una vez resuelta, hara un fetch a la url correspondiente
      */
-    const urlPromises = playersUrl.map(async url => {
-        // return promiseDelay(config.THROTTLE).then(() => {
-        return await fetch(url, ($) => {
+    // return promiseDelay(config.THROTTLE).then(() => {
+    const urlPromises = Promise.mapSeries(playersUrl,
+        // return await 'Here it should be a promise';
+        (url) => fetch(url, ($) => {
             /**
              * Return player from Player Details Page
              */
-            const playerName = $('table.player tbody tr td table tbody tr th').text();
-            return playerName;
+            // const playerName = $('table.player tbody tr td table tbody tr th').text();
+            // return playerName;
+            return getPlayersSchema($);
         })
-        // })
-    });
+    );
     // console.log('@urlPromises', urlPromises);
     return urlPromises;
 }

@@ -89,6 +89,20 @@ function getKeyValueFromArrayOfQueryString(array) {
     }, {});
 }
 
+function getEncodedValue(queryString, value) {
+    const map = getValuesFromQueryString(queryString);
+    let val = map[value];
+    if (!val) {
+        console.error(`The value ${value} doesn't exist in ${map}`)
+        return;
+    }
+    val = val.replace(' ', '%20');
+    if (_.isNumber(_.toNumber(val))) {
+        return _.toNumber(val);
+    }
+    return val;
+}
+
 module.exports = {
     // camelize,
     // isNumeric,
@@ -97,4 +111,5 @@ module.exports = {
     getPlayerUrl,
     log,
     getValuesFromQueryString,
+    getEncodedValue
 }

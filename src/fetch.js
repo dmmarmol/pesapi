@@ -7,11 +7,11 @@ const config = require('./config');
 
 
 
-async function fetch(url, resolve, reject, delay = config.THROTTLE) {
+async function fetch(url, resolve, reject, options = { delay: config.THROTTLE }) {
     // return promiseDelay(config.THROTTLE).then(() => {
 
     utils.log.green('> FETCHING', url);
-    return await Promise.delay(delay).then(() => {
+    return await Promise.delay(options.delay).then(() => {
         return request(url)
             .then((htmlString) => {
                 const $ = cheerio(htmlString);
@@ -19,7 +19,7 @@ async function fetch(url, resolve, reject, delay = config.THROTTLE) {
             })
             .catch((err) => {
                 // Crawling failed...
-                utils.log.red('> Crawler ERROR');
+                utils.log.red('> Crawler ERROR on fetching:', url);
                 console.error(err.mesage || err);
                 if (_.isFunction(reject)) {
                     reject(err)

@@ -1,6 +1,6 @@
 {
     "name": "pesapi",
-    "version": "0.0.6",
+    "version": "0.1.6",
     "description": "PES database API in Node.js (test)",
     "main": "index.js",
     "author": "Diego Martin Marmol <diegomartinmarmol@gmail.com>",

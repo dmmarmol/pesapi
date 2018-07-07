@@ -93,14 +93,23 @@ function getEncodedValue(queryString, value) {
     const map = getValuesFromQueryString(queryString);
     let val = map[value];
     if (!val) {
-        console.error(`The value ${value} doesn't exist in ${map}`)
-        return;
+        return Error(`The value ${value} doesn't exist in ${map}`);
     }
     val = val.replace(' ', '%20');
     if (_.isNumber(_.toNumber(val))) {
         return _.toNumber(val);
     }
     return val;
+}
+
+function getTimeStamp() {
+    const date = new Date();
+    return `${date.getFullYear()}_${date.getMonth()}_${date.getDay()}_${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}`
+}
+
+function getDirPath() {
+    const date = new Date();
+    return `${date.getFullYear()}/${date.getMonth()}`;
 }
 
 module.exports = {
@@ -111,5 +120,7 @@ module.exports = {
     getPlayerUrl,
     log,
     getValuesFromQueryString,
-    getEncodedValue
+    getEncodedValue,
+    getTimeStamp,
+    getDirPath
 }

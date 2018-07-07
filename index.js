@@ -1,5 +1,6 @@
 require("babel-core");
 const path = require("path");
+const fs = require('fs');
 const config = require("./src/config");
 const _ = require('lodash');
 const chalk = require('chalk');
@@ -12,7 +13,7 @@ const crawlPages = require('./src/crawlPages/crawlPages');
 
 
 
-async function go() {
+async function crawl() {
     try {
         /**
          * 1.
@@ -20,26 +21,21 @@ async function go() {
          * con todas las urls de las paginas
          */
         const pagesUrl = await crawlPages.getListOfPagesUrl();
-        // console.log('@pagesUrl', pagesUrl);
         /**
          * 2.
          * Crea una promesa por cada `pageUrl` donde se trae la informacion
          * de todos los jugadores de esa pagina
          */
         /* const allPagesRequest =  */
-        // await Promise.mapSeries(pagesUrl, crawlPlayers.getPlayersFromPage)
         const playersFromPage = await Promise.mapSeries(pagesUrl, crawlPlayers.getPlayersFromPage)
         /**
          * 3.
          * Luego, debe hacer fetch a cada una de las paginas de cada jugador
          * dentro de esa pagina (2.)
          */
-        // .then(response => {
-        //     // console.log('@allPagesRequest', _.flatten(response));
-        //     return _.flatten(response);
-        // });
-        const Allplayers = _.flatten(playersFromPage);
-        console.log('@Allplayers', Allplayers);
+        saveAllPlayers(playersFromPage);
+
+
         // await Promise.all(allPagesRequest).then(
         //     response => {
         //         utils.log.green('@then');
@@ -62,6 +58,35 @@ async function go() {
     } catch (error) {
         console.log(error);
     }
+
 }
 
-go();
+function writeFile(data) {
+    const fileName = utils.getTimeStamp();
+    const version = require("./package.json").version;
+    const dir = path.resolve(config.OUTPUT_PATH, `v${version}`, utils.getDirPath());
+    const file = path.resolve(dir, `players_${fileName}.json`);
+
+    if (!fs.existsSync(dir)) {
+        console.log("======================================");
+        utils.log.green(`Creating directory in ${dir}`);
+        fs.mkdirSync(dir);
+    } else if (fs.existsSync(file)) {
+        console.log("======================================");
+        utils.log.red(`File ${file} already exist`);
+        return;
+    }
+
+    console.log("======================================");
+    console.log(`Writing file in ${file} with ${data.length} players fetched`);
+    fs.writeFileSync(file, JSON.stringify(data), null, 'tab');
+}
+
+const saveAllPlayers = async (playersFromPage) => {
+    const allplayers = await _.flatten(playersFromPage)
+    await writeFile(allplayers);
+    console.log('@allplayers', allplayers);
+    return;
+};
+
+crawl()

@@ -48,7 +48,8 @@ const getEncodedHref = ($, column, tdIndex, prop) => {
  */
 const getEntity = ($, column, tdIndex, prop) => ({
     id: getEncodedHref($, column, tdIndex, prop),
-    name: getValue($, column, tdIndex)
+    name: getValue($, column, tdIndex),
+    link: getElement($, column, tdIndex).children().attr('href')
 })
 
 /**
@@ -83,14 +84,17 @@ const getPositions = ($) => {
         return acc;
     }, {});
 
-    return { ...reducePosition(posFW, 'posFW'), ...reducePosition(posMF, 'posMF'), ...reducePosition(posDF, 'posDF') }
+    return {
+        ...reducePosition(posFW, 'posFW'),
+        ...reducePosition(posMF, 'posMF'),
+        ...reducePosition(posDF, 'posDF')
+    }
 }
 
 const getPlayerSchema = ($) => {
 
     const COL_1 = getCol($, 0);
     // console.log('@COL_1', COL_1);
-    console.log('@getPositions($)', getPositions($));
 
     return {
         image: '',

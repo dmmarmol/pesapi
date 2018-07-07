@@ -119,7 +119,7 @@ async function getPlayersFromPage(pageUrl) {
             // return playerName;
             return getPlayersSchema($);
         })
-    );
+    ).delay(config.THROTTLE);
     // console.log('@urlPromises', urlPromises);
     return urlPromises;
 }

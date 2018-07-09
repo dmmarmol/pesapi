@@ -1,6 +1,8 @@
 const _ = require('lodash');
 const chalk = require('chalk');
 const config = require('./config');
+const path = require('path');
+const fs = require('fs');
 
 // function camelize(str) {
 //     return str
@@ -20,6 +22,8 @@ const config = require('./config');
 //     }
 //     return num;
 // }
+const MONTH_CODES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
 
 const getPageUrl = (pageNumber) => {
     const index = pageNumber <= 0 || !pageNumber ? 1 : pageNumber;
@@ -33,23 +37,28 @@ const getPlayerUrl = (playerId) => {
 /**
  * Logea en colores
  */
+const divider = () => console.log("======================================")
 const log = {
-    white: (value, ...args) => console.log(
-        `${chalk.black.bgWhite(value)}:`,
-        chalk.black.bgWhite(...args)
-    ),
-    red: (value, ...args) => console.log(
-        chalk.whiteBright.bgRed(`${value}:`),
-        chalk.whiteBright.bgRed(...args)
-    ),
-    green: (value, ...args) => console.log(
-        chalk.whiteBright.bgGreen(`${value}:`),
-        chalk.whiteBright.bgGreen(...args)
-    ),
-    blue: (value, ...args) => console.log(
-        chalk.whiteBright.bgBlue(`${value}:`),
-        chalk.whiteBright.bgBlue(...args)
-    ),
+    white: (value, ...args) => {
+        divider();
+        console.log(`${chalk.black.bgWhite(value)}:`, chalk.black.bgWhite(...args))
+    },
+    red: (value, ...args) => {
+        divider();
+        console.log(chalk.whiteBright.bgRed(`${value}:`), chalk.whiteBright.bgRed(...args))
+    },
+    green: (value, ...args) => {
+        divider();
+        console.log(chalk.whiteBright.bgGreen(`${value}:`), chalk.whiteBright.bgGreen(...args))
+    },
+    blue: (value, ...args) => {
+        divider();
+        console.log(chalk.whiteBright.bgBlue(`${value}:`), chalk.whiteBright.bgBlue(...args))
+    },
+    path: (value, ...args) => {
+        divider();
+        console.log(chalk.whiteBright.bgMagenta(`${value}:`), chalk.whiteBright.bgMagenta(...args))
+    },
 }
 
 /**
@@ -96,20 +105,40 @@ function getEncodedValue(queryString, value) {
         return Error(`The value ${value} doesn't exist in ${map}`);
     }
     val = val.replace(' ', '%20');
-    if (_.isNumber(_.toNumber(val))) {
-        return _.toNumber(val);
-    }
     return val;
 }
 
 function getTimeStamp() {
     const date = new Date();
-    return `${date.getFullYear()}_${date.getMonth()}_${date.getDay()}_${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}`
+    return `${date.getFullYear()}_${date.getMonth() + 1}_${date.getDay()}-${date.getHours()}_${date.getMinutes()}_${date.getSeconds()}`
 }
 
 function getDirPath() {
     const date = new Date();
-    return `${date.getFullYear()}/${date.getMonth()}`;
+    return `${date.getFullYear()}${path.sep}${MONTH_CODES[date.getMonth()]}`;
+}
+
+/**
+ * Took from @see https://stackoverflow.com/a/40686853
+ */
+function mkDirByPathSync(targetDir, { isRelativeToScript = false } = {}) {
+    const sep = path.sep;
+    const initDir = path.isAbsolute(targetDir) ? sep : '';
+    const baseDir = isRelativeToScript ? __dirname : '.';
+    targetDir.split(sep).reduce((parentDir, childDir) => {
+        const curDir = path.resolve(baseDir, parentDir, childDir);
+        try {
+            fs.mkdirSync(curDir);
+            log.green(`Directory ${curDir} created!`);
+        } catch (err) {
+            if (err.code !== 'EEXIST') {
+                throw err;
+            }
+            log.red(`Directory ${curDir} already exists!`);
+        }
+
+        return curDir;
+    }, initDir);
 }
 
 module.exports = {
@@ -122,5 +151,6 @@ module.exports = {
     getValuesFromQueryString,
     getEncodedValue,
     getTimeStamp,
-    getDirPath
+    getDirPath,
+    mkDirByPathSync
 }

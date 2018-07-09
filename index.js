@@ -13,7 +13,7 @@ const crawlPages = require('./src/crawlPages/crawlPages');
 
 
 
-async function crawl() {
+async function crawlData() {
     try {
         /**
          * 1.
@@ -25,17 +25,13 @@ async function crawl() {
          * 2.
          * Crea una promesa por cada `pageUrl` donde se trae la informacion
          * de todos los jugadores de esa pagina
-         */
-        /* const allPagesRequest =  */
-        const playersFromPage = await Promise.mapSeries(pagesUrl, crawlPlayers.getPlayersFromPage)
-        /**
-         * 3.
+         *
          * Luego, debe hacer fetch a cada una de las paginas de cada jugador
          * dentro de esa pagina (2.)
          */
-        saveAllPlayers(playersFromPage);
+        const playersFromPage = await Promise.mapSeries(pagesUrl, crawlPlayers.getPlayersFromPage)
 
-
+        return await playersFromPage;
         // await Promise.all(allPagesRequest).then(
         //     response => {
         //         utils.log.green('@then');
@@ -61,32 +57,37 @@ async function crawl() {
 
 }
 
-function writeFile(data) {
-    const fileName = utils.getTimeStamp();
-    const version = require("./package.json").version;
-    const dir = path.resolve(config.OUTPUT_PATH, `v${version}`, utils.getDirPath());
-    const file = path.resolve(dir, `players_${fileName}.json`);
-
-    if (!fs.existsSync(dir)) {
-        console.log("======================================");
-        utils.log.green(`Creating directory in ${dir}`);
-        fs.mkdirSync(dir);
-    } else if (fs.existsSync(file)) {
-        console.log("======================================");
-        utils.log.red(`File ${file} already exist`);
-        return;
-    }
-
-    console.log("======================================");
-    console.log(`Writing file in ${file} with ${data.length} players fetched`);
-    fs.writeFileSync(file, JSON.stringify(data), null, 'tab');
+function writeFile(data, filePath) {
+    utils.log.path('Writing file in', `${filePath} with ${data.length} players fetched`);
+    fs.writeFileSync(filePath, JSON.stringify(data), null, "\t");
 }
 
-const saveAllPlayers = async (playersFromPage) => {
-    const allplayers = await _.flatten(playersFromPage)
-    await writeFile(allplayers);
-    console.log('@allplayers', allplayers);
-    return;
-};
+async function createDir() {
+    const fileName = utils.getTimeStamp();
+    const version = require("./package.json").version;
+    const dir = `${config.OUTPUT_PATH}${path.sep}v${version}${path.sep}${utils.getDirPath()}`;
+    const filePath = path.resolve(dir, `players_${fileName}.json`);
 
-crawl()
+    // fs.mkdirSync(dir);
+    if (!fs.existsSync(dir)) {
+        utils.mkDirByPathSync(dir);
+        // Error(`dir ${dir} couldn't be created`)
+    }
+
+    return filePath;
+}
+
+async function start() {
+    const filePath = await createDir();
+    const data = await crawlData();
+    const flattenedData = await _.flatten(data);
+    if (config.DEBUG) {
+        utils.log.green('Players Crawled')
+        // flattenedData.forEach(player => console.log(player.playerName));
+        console.log('@Players', flattenedData);
+        return;
+    }
+    await writeFile(flattenedData, filePath);
+}
+
+start();

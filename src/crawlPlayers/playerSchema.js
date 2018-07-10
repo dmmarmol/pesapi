@@ -12,25 +12,43 @@ const { getCol,
     getPlayingStyles
 } = playerUtils;
 
-module.exports = ($) => {
 
-    // utils.log.blue('COL_1');
+module.exports = ($) => {
     const COL_1 = getCol($, 0);
+
+    const isFreeAgent = getValue($, { column: COL_1, row: 2 }) === 'Free Agent';
+
+    const skills = [
+        'playerName',
+        'squadNumber',
+        'team',
+        'league',
+        'nationality',
+        'region',
+        'height',
+        'weight',
+        'age',
+        'foot',
+        'condition',
+        'mainPosition',
+    ].filter(skill => isFreeAgent ? skill !== 'squadNumber' : true);
+
+    const getRow = (skill) => skills.indexOf(skill);
 
     return {
         image: '',
-        playerName: getValue($, { column: COL_1, row: 0 }),
-        squadNumber: _.toNumber(getValue($, { column: COL_1, row: 1 })),
-        team: getEntity($, { column: COL_1, row: 2 }, 'club_team'),
-        league: getEntity($, { column: COL_1, row: 3 }, 'league'),
-        nationality: getEntity($, { column: COL_1, row: 4 }, 'nationality'),
-        region: getEntity($, { column: COL_1, row: 5 }, 'region'),
-        height: _.toNumber(getValue($, { column: COL_1, row: 6 })),
-        weight: _.toNumber(getValue($, { column: COL_1, row: 7 })),
-        age: _.toNumber(getValue($, { column: COL_1, row: 8 })),
-        foot: getValue($, { column: COL_1, row: 9 }),
-        condition: getValue($, { column: COL_1, row: 10 }),
-        mainPosition: getValue($, { column: COL_1, row: 11 }),
+        playerName: getValue($, { column: COL_1, row: getRow('playerName') }),
+        squadNumber: isFreeAgent ? 0 : _.toNumber(getValue($, { column: COL_1, row: getRow('squadNumber') })),
+        team: getEntity($, { column: COL_1, row: getRow('team') }, 'club_team'),
+        league: getEntity($, { column: COL_1, row: getRow('league') }, 'league'),
+        nationality: getEntity($, { column: COL_1, row: getRow('nationality') }, 'nationality'),
+        region: getEntity($, { column: COL_1, row: getRow('region') }, 'region'),
+        height: _.toNumber(getValue($, { column: COL_1, row: getRow('height') })),
+        weight: _.toNumber(getValue($, { column: COL_1, row: getRow('weight') })),
+        age: _.toNumber(getValue($, { column: COL_1, row: getRow('age') })),
+        foot: getValue($, { column: COL_1, row: getRow('foot') }),
+        condition: getValue($, { column: COL_1, row: getRow('condition') }),
+        mainPosition: getValue($, { column: COL_1, row: getRow('mainPosition') }),
         positions: getPositions($),
         ...getRatings($),
         stats: getStats($),

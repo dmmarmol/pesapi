@@ -1,11 +1,11 @@
 const _ = require('lodash');
 const Promise = require('bluebird');
-const progress = require('multi-progress');
 // Custom Modules
 const fetch = require('../fetch');
 const config = require("../config");
 const utils = require('../utils');
 const getPlayersSchema = require('./playerSchema');
+
 
 
 const columnMapping = {
@@ -22,22 +22,14 @@ const columnMapping = {
 
 function getRowValues($, row) {
     // console.log($(row.children[1]).text());
-    utils.log.blue(`> Getting Player: ${$(row.children[1]).text()} from row`);
+    utils.log.blue(`> Getting Player: ${$(row.children[1]).text()}`);
     const columns = row.children.reduce((player, column, colIndex) => {
-        // console.log(column);
         const col = $(column);
-        // console.log(col);
         const href = col.children().attr('href');
-        // console.log('@href', href);
         const parsedHref = !!href ? utils.getValuesFromQueryString(href) : {};
-        // console.log('@parsedHref', parsedHref);
         const value = col.text();
-        // console.log('@value', value);
+
         const playerObject = Object.keys(columnMapping).reduce((player, mapValue) => {
-            // log.white('@mapValue', mapValue);
-            // log.blue('@colIndex', colIndex);
-            // log.red('@colIndex === mapValue', colIndex === _.toNumber(mapValue));
-            // console.log('@columnMapping[colIndex]', columnMapping[colIndex]);
             const mapIndex = _.toNumber(mapValue);
             if (colIndex === mapIndex) {
                 /** Obtiene la columna */
@@ -47,8 +39,7 @@ function getRowValues($, row) {
             }
             return player;
         }, {});
-        // console.log('@playerObject', playerObject);
-        // console.log('@player', player);
+
         return {
             ...player,
             ...playerObject,
@@ -60,7 +51,7 @@ function getRowValues($, row) {
 }
 
 /**
- * Busca los player.id de una url provista 
+ * Look for the player.id's from a given URL
  */
 async function getPlayersUrlsFromPage(url) {
     return await fetch(url, ($) => {
@@ -72,34 +63,24 @@ async function getPlayersUrlsFromPage(url) {
         const rows = table.find('tbody tr').toArray();
         const maxPlayers = config.DEBUG ? config.MAX_PLAYERS_PER_PAGE + 1 : rows.length;
         const players = rows.slice(1, maxPlayers);
-        // console.log(players);
         const statsRow = rows[0];
 
-        // Remove the last column (player skills)
-        const columns = $(statsRow)
-            .children("td")
-            .slice(0, 3);
-        // TODO: Iterate this column on a diferent way
-        const skillsColumn = $(statsRow)
-            .children("td")
-            .last();
-        // Collect the player ids
-        // console.log(players);
+        /**
+         * Collect the player ids
+         * */
         const playersUrl = players.map((row) => {
             const player = getRowValues($, row);
             const id = _.toNumber(player.id);
             return utils.getPlayerUrl(id);
         });
-        // console.log('@url', url);
-        // console.log('@playersUrl', playersUrl);
+
         return playersUrl;
     })
 }
 
 async function getPlayersFromPage(pageUrl) {
     const playersUrl = await getPlayersUrlsFromPage(pageUrl) || [];
-    console.log('@playersUrl', playersUrl);
-    // return;
+
     /**
      * EN:
      * Map the array of playersUrl and return a Delayed Promise on each item
@@ -108,19 +89,19 @@ async function getPlayersFromPage(pageUrl) {
      * Mapea el array de playersUlr y devuelve una promesa con delay por cada item
      * donde una vez resuelta, hara un fetch a la url correspondiente
      */
-    // return promiseDelay(config.THROTTLE).then(() => {
     const urlPromises = Promise.mapSeries(playersUrl,
-        // return await 'Here it should be a promise';
         (url) => fetch(url, ($) => {
             /**
              * Return player from Player Details Page
              */
-            // const playerName = $('table.player tbody tr td table tbody tr th').text();
-            // return playerName;
             return getPlayersSchema($);
         })
+            .then((response) => {
+                bar.tick()
+                return response;
+            })
     ).delay(config.THROTTLE);
-    // console.log('@urlPromises', urlPromises);
+
     return urlPromises;
 }
 

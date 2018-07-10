@@ -4,24 +4,6 @@ const config = require('./config');
 const path = require('path');
 const fs = require('fs');
 
-// function camelize(str) {
-//     return str
-//         .replace(/(?:^\w|[A-Z]|\b\w)/g, function (letter, index) {
-//             return index == 0 ? letter.toLowerCase() : letter.toUpperCase();
-//         })
-//         .replace(/\s+/g, "");
-// }
-
-// function isNumeric(num) {
-//     return !isNaN(num);
-// }
-
-// function makeNumeric(num) {
-//     if (!isNumeric(num)) {
-//         return +num;
-//     }
-//     return num;
-// }
 const MONTH_CODES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
 
@@ -37,7 +19,7 @@ const getPlayerUrl = (playerId) => {
 /**
  * Logea en colores
  */
-const divider = () => console.log("======================================")
+const divider = () => console.log("______")
 const log = {
     white: (value, ...args) => {
         divider();
@@ -73,15 +55,10 @@ function getValuesFromQueryString(string) {
     const removableKeys = ['sort', 'all', 'order'];
 
     const array = string.split('?');
-    // console.log('@array', array);
     const filtered = array.filter(value => !removableValues.includes(value));
-    // console.log('@filtered', filtered);
     const splitted = _.flatten(filtered.map(value => value.split('&')));
-    // console.log('@splitted', splitted);
     const mapped = getKeyValueFromArrayOfQueryString(splitted);
-    // console.log('@mapped', mapped);
     const splittedWithoutUselessKeys = _.omit(mapped, removableKeys);
-    // console.log('@splittedWithoutUselessKeys', splittedWithoutUselessKeys);
     return splittedWithoutUselessKeys;
 }
 
@@ -142,9 +119,6 @@ function mkDirByPathSync(targetDir, { isRelativeToScript = false } = {}) {
 }
 
 module.exports = {
-    // camelize,
-    // isNumeric,
-    // makeNumeric,
     getPageUrl,
     getPlayerUrl,
     log,

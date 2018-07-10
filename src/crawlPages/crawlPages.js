@@ -4,7 +4,6 @@ const fetch = require('../fetch');
 const config = require("../config");
 const utils = require('../utils');
 
-
 async function getListOfPagesUrl(pageNumber) {
     const url = config.BASE_URL;
     return await fetch(url, ($) => {
@@ -15,7 +14,7 @@ async function getListOfPagesUrl(pageNumber) {
         const lastIndex = config.DEBUG ? config.MAX_PAGES : _.toNumber($(last).text());
 
         /**
-         * Crea un array de paginas comenzando por 2
+         * Makes an array of pages begining from 2
          */
         const pages = _.range(firstIndex, lastIndex + 1).map(page => {
             const index = (page === 1) ? 0 : page;

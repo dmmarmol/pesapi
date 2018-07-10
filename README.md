@@ -7,8 +7,10 @@ This project was indented to be a proof of concept involving web scrapping and m
 
 ### References
 - [Scrapping the web with node.js](https://scotch.io/tutorials/scraping-the-web-with-node-js)
+- [Simple Async/Await Example](https://gist.github.com/wesbos/1866f918824936ffb73d8fd0b02879b4)
 - [Using `Promise.all` to resolve multiple request](https://stackoverflow.com/questions/45389677/using-promise-all-to-resolve-fetch-requests)
 
+> This proyect uses yarn to handle dependencies
 
 ### Install
 
@@ -19,9 +21,4 @@ Clone this project and `cd` into it and run
 yarn && yarn start 
 ```
 
-#### If not, then classic `npm install`
-```
-npm install && npm run start
-```
-
-At this moment the gathered information should be placed inside an `./output` directory and inside a sub directory with the corresponding version name. Eg.: `./output/v0.0.2/players_...`
+At this moment the gathered information should be placed inside an `./output` directory and inside a sub directory with the corresponding version name, year and  month. Eg.: `./output/{version}/{year}/{month}/players.json`

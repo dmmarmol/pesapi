@@ -10,7 +10,9 @@
         "build": "rimraf dist/ && babel ./index.js ./src/**/*.js --out-dir dist/ --ignore ./node_modules,./.babelrc,./npm-debug.log --copy-files",
         "copyPackageJson": "cp package.json dist/",
         "start:build": "cross-env NODE_ENV=development yarn build && node dist/index.js",
-        "start": "nodemon index.js"
+        "start0.1.6": "npx nodemon src.0.1.6/index.js",
+        "start": "yarn run ts-node src/index.ts",
+        "dev": "yarn run nodemon"
     },
     "dependencies": {
         "bluebird": "^3.5.1",
@@ -39,6 +41,9 @@
         "babel-preset-stage-1": "6.24.1",
         "babel-runtime": "6.26.0",
         "cross-env": "5.1.0",
-        "eslint": "4.9.0"
+        "eslint": "4.9.0",
+        "nodemon": "^2.0.4",
+        "ts-node": "^9.0.0",
+        "typescript": "^4.0.2"
     }
 }

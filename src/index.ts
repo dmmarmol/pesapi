@@ -1,11 +1,5 @@
-interface A {
-  name: string;
-}
-
-function getName(): A {
-  return {
-    name: "Diego",
-  };
-}
-
-console.log(getName());
+const state = {
+  pages: 1,
+  players: [],
+  maxPlayers: 15251,
+};

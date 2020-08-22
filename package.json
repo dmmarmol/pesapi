@@ -15,6 +15,7 @@
         "dev": "yarn run nodemon"
     },
     "dependencies": {
+        "axios": "^0.20.0",
         "bluebird": "^3.5.1",
         "chalk": "^2.4.1",
         "cheerio": "1.0.0-rc.2",
@@ -27,6 +28,7 @@
         "url": "0.11.0"
     },
     "devDependencies": {
+        "@types/cheerio": "^0.22.21",
         "babel-cli": "6.26.0",
         "babel-plugin-dynamic-import-node": "1.1.0",
         "babel-plugin-transform-async-to-generator": "^6.24.1",

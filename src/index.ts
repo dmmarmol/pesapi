@@ -5,6 +5,7 @@ let state = {
   pages: 1,
   players: [],
   totalPlayers: 0,
+  lastPlayerId: 0,
 };
 
 type State = typeof state;

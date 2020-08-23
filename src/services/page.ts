@@ -1,5 +1,5 @@
 const { crawl } = require("./request");
-const { first, last, compose } = require("../utils");
+const { first, last, compose } = require("../tools/utils");
 
 export async function getAmountOfPages(): Promise<number> {
   const $ = await crawl();
@@ -13,7 +13,7 @@ export async function getAmountOfPages(): Promise<number> {
   return Number(numberOfPages.data);
 }
 
-export async function getMaxPlayers(): Promise<number> {
+export async function getTotalPlayers(): Promise<number> {
   const $ = await crawl();
   const links: Array<CheerioElement> = $(".pages span").toArray();
   const maxPlayersString: string = compose(
@@ -23,10 +23,6 @@ export async function getMaxPlayers(): Promise<number> {
     last
   )(links);
 
-  //   const maxPlayersNumber = Number(maxPlayersString.replace(/\d+/, ""));
-  console.log(maxPlayersString);
-
-  return 1;
+  const maxPlayersNumber = Number(maxPlayersString.match(/\d+/)[0]);
+  return maxPlayersNumber;
 }
-
-getMaxPlayers();

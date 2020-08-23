@@ -22,6 +22,8 @@
         "express": "4.16.2",
         "lodash": "4.17.4",
         "multi-progress": "^2.0.0",
+        "pino": "^6.5.1",
+        "pino-pretty": "^4.1.0",
         "query-string": "6.1.0",
         "request": "2.83.0",
         "request-promise": "4.2.2",

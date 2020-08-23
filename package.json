@@ -10,21 +10,27 @@
         "build": "rimraf dist/ && babel ./index.js ./src/**/*.js --out-dir dist/ --ignore ./node_modules,./.babelrc,./npm-debug.log --copy-files",
         "copyPackageJson": "cp package.json dist/",
         "start:build": "cross-env NODE_ENV=development yarn build && node dist/index.js",
-        "start": "nodemon index.js"
+        "start0.1.6": "npx nodemon src.0.1.6/index.js",
+        "start": "yarn run ts-node src/index.ts",
+        "dev": "yarn run nodemon"
     },
     "dependencies": {
+        "axios": "^0.20.0",
         "bluebird": "^3.5.1",
         "chalk": "^2.4.1",
         "cheerio": "1.0.0-rc.2",
         "express": "4.16.2",
         "lodash": "4.17.4",
         "multi-progress": "^2.0.0",
+        "pino": "^6.5.1",
+        "pino-pretty": "^4.1.0",
         "query-string": "6.1.0",
         "request": "2.83.0",
         "request-promise": "4.2.2",
         "url": "0.11.0"
     },
     "devDependencies": {
+        "@types/cheerio": "^0.22.21",
         "babel-cli": "6.26.0",
         "babel-plugin-dynamic-import-node": "1.1.0",
         "babel-plugin-transform-async-to-generator": "^6.24.1",
@@ -39,6 +45,9 @@
         "babel-preset-stage-1": "6.24.1",
         "babel-runtime": "6.26.0",
         "cross-env": "5.1.0",
-        "eslint": "4.9.0"
+        "eslint": "4.9.0",
+        "nodemon": "^2.0.4",
+        "ts-node": "^9.0.0",
+        "typescript": "^4.0.2"
     }
 }

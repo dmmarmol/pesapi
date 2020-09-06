@@ -1,4 +1,4 @@
-const { getPlayerIdsByPage } = require("../page");
+const { getPlayerIdsFromPage } = require("../page");
 const { logger, logSeparator } = require("../../tools/logger");
 const { useState } = require("../../tools/state");
 const { sleep } = require("../../tools/request");
@@ -17,7 +17,7 @@ export async function getAllPlayerIds(): Promise<number[]> {
     logger.info(`Getting Player Ids`);
     // const promises = arrayOfPages.reduce((acc, curr) => {
     //   const req = async (n) => {
-    //     return await getPlayerIdsByPage(n);
+    //     return await getPlayerIdsFromPage(n);
     //   };
 
     //   return [...acc, req(curr)];
@@ -27,7 +27,7 @@ export async function getAllPlayerIds(): Promise<number[]> {
 
     let results: number[] = [];
     for (let id of arrayOfPages) {
-      const req = async (id): Promise<number> => await getPlayerIdsByPage(id);
+      const req = async (id): Promise<number> => await getPlayerIdsFromPage(id);
       const playerIds = await req(id).then((playerIds) => {
         logger.info(`Requested ids: ${playerIds}`);
         return playerIds;

@@ -39,7 +39,7 @@ const column = {
   RAITING: 8,
 };
 
-export async function getPlayerIdsByPage(page: number): Promise<number[]> {
+export async function getPlayerIdsFromPage(page: number): Promise<number[]> {
   const params = page !== 0 ? { page } : undefined;
   const $ = await crawl("/", params); // ?page=2
   /**

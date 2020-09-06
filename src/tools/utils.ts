@@ -18,3 +18,11 @@ export function last<T>(list: Array<T> | string): T | undefined {
 /** @see https://medium.com/@dtipson/creating-an-es6ish-compose-in-javascript-ac580b95104a */
 export const compose = (...fns) =>
   fns.reduce((f, g) => (...args) => f(g(...args)));
+
+export function getNumber(str: string) {
+  return Number(str.match(/\d+/)[0]) ?? undefined;
+}
+
+export function identity(x) {
+  return x;
+}

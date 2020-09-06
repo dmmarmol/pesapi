@@ -1,38 +1,25 @@
 const { getAmountOfPages, getTotalPlayers } = require("./services/page");
-const { logger, logSeparator } = require("./tools/logger");
+const { useState } = require("./tools/state");
+const { getAllPlayerIds } = require("./services/players");
 
-let state = {
-  pages: 1,
-  players: [],
-  totalPlayers: 0,
-  lastPlayerId: 0,
-};
-
-type State = typeof state;
-type SetState = State;
-
-logSeparator();
-logger.info("Initial State");
-logger.info(state);
-function setState(value: { [i in keyof typeof state]?: any }): State {
-  const nextState = {
-    ...state,
-    ...value,
-  };
-  state = nextState;
-  logSeparator();
-  logger.info("New State");
-  logger.info(state);
-  return state;
-}
-
-async function init() {
-  const pages = await getAmountOfPages();
+async function prepareBaseState() {
+  const [state, setState] = useState();
+  const totalPages = await getAmountOfPages();
   const totalPlayers = await getTotalPlayers();
   setState({
-    pages,
+    totalPages,
     totalPlayers,
   });
+}
+
+/**
+ * Start
+ */
+async function init() {
+  const [state, setState] = useState();
+  await prepareBaseState();
+  const playerIds = await getAllPlayerIds();
+  setState({ playerIds });
 }
 
 init();

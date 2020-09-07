@@ -1,18 +1,16 @@
 import {
   AxiosResponse,
-  AxiosRequestConfig,
   AxiosError,
   AxiosInstance,
+  AxiosInterceptorManager,
 } from "axios";
 const Axios = require("axios");
 const cheerio = require("cheerio");
 const { BASE_URL } = require("../env");
 const { logger, logSeparator } = require("./logger");
-const { identity, compose } = require("./utils");
+const { identity } = require("./utils");
 
-const REQUEST_TIMEOUT_MINUTES_IN_MS = 60 * 5 * 1000; // 5m
-const REQUEST_TIMEOUT_SECONDS = 5; // 5s
-const REQUEST_TIMEOUT_MINUTES = 3;
+const REQUEST_TIMEOUT_MINUTES = 3.05;
 const AxiosInstance: AxiosInstance = Axios.create({
   baseURL: BASE_URL,
   timeout: 3000,
@@ -22,34 +20,22 @@ function secToMS(seconds: number) {
   return seconds * 1000;
 }
 function minToSec(minutes: number) {
-  return minutes / 60;
+  const result = minutes * 60;
+  console.log(`CONVERSION: ${minutes} minutes are ${result} seconds`);
+  return result;
 }
 function msToMin(ms: number) {
-  return ms / 60 / 1000;
+  const result = ms / 60 / 1000;
+  console.log(`CONVERSION: ${ms} milliseconds are ${result} minutes`);
+  return result;
 }
 function minToMs(minutes: number) {
-  return minutes * 60 * 1000;
+  const result = minutes * 60 * 1000;
+  console.log(`CONVERSION: ${minutes} minutes are ${result} miliseconds`);
+  return result;
 }
 
-let lastInvocationTime: number | undefined = undefined;
-
-const scheduler = (config: AxiosRequestConfig) => {
-  const now = Date.now();
-  if (lastInvocationTime) {
-    lastInvocationTime += 2000;
-    const waitPeriodForThisRequest = lastInvocationTime - now;
-    if (waitPeriodForThisRequest > 0) {
-      return new Promise((resolve) => {
-        setTimeout(() => resolve(config), waitPeriodForThisRequest);
-      });
-    }
-  }
-
-  lastInvocationTime = now;
-  return config;
-};
-
-const countdown = (duration: number) => {
+const countdown = async (durationInSeconds: number) => {
   let start = Date.now(),
     diff,
     minutes,
@@ -58,7 +44,7 @@ const countdown = (duration: number) => {
   const timer = (resolve: () => void) => {
     // get the number of seconds that have elapsed since
     // startTimer() was called
-    diff = duration - (((Date.now() - start) / 1000) | 0);
+    diff = durationInSeconds - (((Date.now() - start) / 1000) | 0);
 
     // does the same job as parseInt truncates the float
     minutes = (diff / 60) | 0;
@@ -74,43 +60,44 @@ const countdown = (duration: number) => {
       resolve();
     }
   };
-  return new Promise((resolve) => {
+  return await new Promise((resolve) => {
     // we don't want to wait a full second before the timer starts
     timer(resolve);
     int = setInterval(() => timer(resolve), 1000);
   });
 };
 
-const errorHandler = async function (error: AxiosError) {
-  logger.info("ERROR");
-  console.log(error.response.status);
-  if (error.response.status === 429) {
-    logger.info(error.response.statusText);
-    logger.info(error.response.data);
-    logger.info(
-      "Request Failed was:",
-      error.config.baseURL,
-      error.config.params
-    );
-    const seconds = compose(minToSec, msToMin)(REQUEST_TIMEOUT_MINUTES);
-    const miliseconds = minToMs(REQUEST_TIMEOUT_MINUTES);
-    await countdown(seconds);
-    setTimeout(() => {
-      return AxiosInstance.request(error.config);
-    }, miliseconds + 100);
-    logSeparator();
-    // return Promise.resolve(error.request);
-    // return Promise.resolve(instance.get(error.request));
-    // console.log(typeof error.request);
-    // console.log(error.request._header);
-    // return Promise.resolve()
-  }
-  // Do something with response error
-  return Promise.reject(error);
+const makeErrorHandler = () => {
+  let attempt = 0;
+  const errorHandler = async function (error: AxiosError) {
+    logger.info("ERROR");
+    const { response, config } = error;
+    if (response.status === 429) {
+      logger.info(`Error ${response.status} - ${response.statusText}`);
+      logger.info(response.data);
+      logger.info(
+        `Request Failed was: ${config.baseURL} - ${JSON.stringify(
+          config.params
+        )}`
+      );
+      logSeparator();
+      const seconds = minToSec(REQUEST_TIMEOUT_MINUTES + attempt / 6);
+      await countdown(seconds);
+      attempt = attempt + 1;
+      console.log(`attempt: ${attempt}`);
+      await AxiosInstance.request(config);
+      logSeparator();
+    }
+    // reset the request attempts
+    attempt = 0;
+    // Do something with response error
+    return Promise.reject(error);
+  };
+
+  return errorHandler;
 };
 
-AxiosInstance.interceptors.request.use(scheduler);
-AxiosInstance.interceptors.response.use(identity, errorHandler);
+AxiosInstance.interceptors.response.use(identity, makeErrorHandler());
 
 type Params = { [i: string]: any };
 
@@ -125,7 +112,7 @@ export async function request<T>(
   logSeparator();
 
   logger.info(
-    `Request made to: ${p} with { params: ${JSON.stringify(params)} }`
+    `Request made to: "${p}" with { params: ${JSON.stringify(params)} }`
   );
   const { data } = await AxiosInstance.get(p, { params });
   logger.info(`Output was: ${JSON.stringify(data).slice(0, 30)}...`);

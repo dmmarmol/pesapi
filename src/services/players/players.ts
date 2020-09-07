@@ -9,32 +9,33 @@ const { sleep } = require("../../tools/request");
 export async function getAllPlayerIds(): Promise<number[]> {
   const [state] = useState();
   const { totalPages } = state;
-  //   const arrayOfPages = Array.from(Array(totalPages), (_, i) => i + 1);
-  const arrayOfPages = Array.from(Array(100), (_, i) => i + 1);
+  const arrayOfPages = Array.from(Array(totalPages), (_, i) => i + 1);
 
   async function requestIds() {
     logSeparator();
     logger.info(`Getting Player Ids`);
-    // const promises = arrayOfPages.reduce((acc, curr) => {
-    //   const req = async (n) => {
-    //     return await getPlayerIdsFromPage(n);
-    //   };
 
-    //   return [...acc, req(curr)];
-    // }, []);
-    // const ids = await Promise.all(promises);
-    // return ids.flat(Infinity);
-
+    /**
+     * Perform multiple request synchronously
+     * through a for .. of loop + await-ing every request
+     * the result of each request is pushed into the results array
+     */
     let results: number[] = [];
     for (let id of arrayOfPages) {
-      const req = async (id): Promise<number> => await getPlayerIdsFromPage(id);
+      const req = async (id): Promise<number[]> => {
+        // Sleep 3 seconds before request
+        await sleep(3000);
+        return await getPlayerIdsFromPage(id);
+      };
       const playerIds = await req(id).then((playerIds) => {
-        logger.info(`Requested ids: ${playerIds}`);
+        logger.info(
+          `Requested ids (${playerIds.length}): ${playerIds.slice(0, 5)}...`
+        );
         return playerIds;
       });
-      results.push(playerIds);
+      results.push(...playerIds);
     }
-    return results.flat(Infinity).sort((a, b) => a - b);
+    return results.sort((a, b) => a - b);
   }
 
   const ids = await requestIds();

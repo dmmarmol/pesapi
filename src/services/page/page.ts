@@ -1,5 +1,5 @@
-const { crawl } = require("../tools/request");
-const { first, last, compose, getNumber } = require("../tools/utils");
+const { crawl } = require("../../tools/request");
+const { first, last, compose, getNumber } = require("../../tools/utils");
 
 export async function getAmountOfPages(): Promise<number> {
   const $ = await crawl();

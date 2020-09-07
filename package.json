@@ -10,13 +10,11 @@
         "build": "rimraf dist/ && babel ./index.js ./src/**/*.js --out-dir dist/ --ignore ./node_modules,./.babelrc,./npm-debug.log --copy-files",
         "copyPackageJson": "cp package.json dist/",
         "start:build": "cross-env NODE_ENV=development yarn build && node dist/index.js",
-        "start0.1.6": "npx nodemon src.0.1.6/index.js",
-        "start": "yarn run ts-node src/index.ts",
+        "start": "yarn run ts-node ./src/index.ts",
         "dev": "yarn run nodemon"
     },
     "dependencies": {
         "axios": "^0.20.0",
-        "bluebird": "^3.5.1",
         "chalk": "^2.4.1",
         "cheerio": "1.0.0-rc.2",
         "pino": "^6.5.1",

@@ -26,3 +26,25 @@ export function getNumber(str: string) {
 export function identity(x) {
   return x;
 }
+
+export function secToMS(seconds: number) {
+  return seconds * 1000;
+}
+
+export function minToSec(minutes: number) {
+  const result = minutes * 60;
+  console.log(`CONVERSION: ${minutes} minutes are ${result} seconds`);
+  return result;
+}
+
+export function msToMin(ms: number) {
+  const result = ms / 60 / 1000;
+  console.log(`CONVERSION: ${ms} milliseconds are ${result} minutes`);
+  return result;
+}
+
+export function minToMs(minutes: number) {
+  const result = minutes * 60 * 1000;
+  console.log(`CONVERSION: ${minutes} minutes are ${result} miliseconds`);
+  return result;
+}

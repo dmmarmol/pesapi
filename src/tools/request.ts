@@ -8,32 +8,13 @@ const Axios = require("axios");
 const cheerio = require("cheerio");
 const { BASE_URL } = require("../env");
 const { logger, logSeparator } = require("./logger");
-const { identity } = require("./utils");
+const { identity, minToSec } = require("./utils");
 
 const REQUEST_TIMEOUT_MINUTES = 3.05;
 const AxiosInstance: AxiosInstance = Axios.create({
   baseURL: BASE_URL,
   timeout: 3000,
 });
-
-function secToMS(seconds: number) {
-  return seconds * 1000;
-}
-function minToSec(minutes: number) {
-  const result = minutes * 60;
-  console.log(`CONVERSION: ${minutes} minutes are ${result} seconds`);
-  return result;
-}
-function msToMin(ms: number) {
-  const result = ms / 60 / 1000;
-  console.log(`CONVERSION: ${ms} milliseconds are ${result} minutes`);
-  return result;
-}
-function minToMs(minutes: number) {
-  const result = minutes * 60 * 1000;
-  console.log(`CONVERSION: ${minutes} minutes are ${result} miliseconds`);
-  return result;
-}
 
 const countdown = async (durationInSeconds: number) => {
   let start = Date.now(),
@@ -50,8 +31,8 @@ const countdown = async (durationInSeconds: number) => {
     minutes = (diff / 60) | 0;
     seconds = diff % 60 | 0;
 
-    minutes = minutes < 10 ? "0" + minutes : minutes;
-    seconds = seconds < 10 ? "0" + seconds : seconds;
+    minutes = minutes < 10 ? `0${minutes}` : minutes;
+    seconds = seconds < 10 ? `0${seconds}` : seconds;
 
     logger.info(`Next request in: ${minutes}:${seconds}`);
 

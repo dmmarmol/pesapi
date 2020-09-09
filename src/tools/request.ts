@@ -9,14 +9,14 @@ const cheerio = require("cheerio");
 const { BASE_URL } = require("../env");
 const { logger, logSeparator } = require("./logger");
 const { identity, minToSec } = require("./utils");
+const { REQUEST_TIMEOUT_MINUTES } = require("../env");
 
-const REQUEST_TIMEOUT_MINUTES = 3.05;
 const AxiosInstance: AxiosInstance = Axios.create({
   baseURL: BASE_URL,
   timeout: 3000,
 });
 
-const countdown = async (durationInSeconds: number) => {
+export const countdown = async (durationInSeconds: number) => {
   let start = Date.now(),
     diff,
     minutes,

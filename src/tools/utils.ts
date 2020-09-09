@@ -27,6 +27,15 @@ export function identity(x) {
   return x;
 }
 
+export function chunk(value: number, array: any[]) {
+  const array_chunks = (array: any[], chunk_size: number) =>
+    Array(Math.ceil(array.length / chunk_size))
+      .fill(undefined)
+      .map((_, index) => index * chunk_size)
+      .map((begin) => array.slice(begin, begin + chunk_size));
+  return array_chunks(array, value);
+}
+
 export function secToMS(seconds: number) {
   return seconds * 1000;
 }

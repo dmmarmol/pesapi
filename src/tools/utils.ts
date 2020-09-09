@@ -19,6 +19,11 @@ export function last<T>(list: Array<T> | string): T | undefined {
 export const compose = (...fns) =>
   fns.reduce((f, g) => (...args) => f(g(...args)));
 
+/**
+ * Extract number from string
+ * @example
+ *  getNumber('1234 amazing') // outputs 1234
+ */
 export function getNumber(str: string) {
   return Number(str.match(/\d+/)[0]) ?? undefined;
 }
@@ -27,6 +32,10 @@ export function identity(x) {
   return x;
 }
 
+/**
+ * Generate a two dimensional array from a given length
+ * Makes n amount of groups (array) from a one dimensional array
+ */
 export function chunk(value: number, array: any[]) {
   const array_chunks = (array: any[], chunk_size: number) =>
     Array(Math.ceil(array.length / chunk_size))
@@ -37,7 +46,9 @@ export function chunk(value: number, array: any[]) {
 }
 
 export function secToMS(seconds: number) {
-  return seconds * 1000;
+  const result = seconds * 1000;
+  console.log(`CONVERSION: ${seconds} seconds are ${result} miliseconds`);
+  return result;
 }
 
 export function minToSec(minutes: number) {

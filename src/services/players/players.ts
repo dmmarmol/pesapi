@@ -16,10 +16,12 @@ function makeGroupsOfIds(ids: string[]) {
 /**
  * Crawl a list of all players Ids from all the DataBase
  */
-export async function getAllPlayerIds(): Promise<Result> {
+export async function getPlayerIdsByPage(): Promise<Result> {
   const [state] = useState();
   const { totalPages } = state;
-  const arrayOfPages: number[] = Array.from(Array(totalPages), (_, i) => i + 1);
+  // const arrayOfPages: number[] = Array.from(Array(totalPages), (_, i) => i + 1);
+  const arrayOfPages: number[] = Array.from(Array(40), (_, i) => i + 1);
+  const groupedIds: number[][] = chunk(20, arrayOfPages);
 
   async function requestIds(): Promise<Result> {
     logSeparator();
@@ -34,24 +36,31 @@ export async function getAllPlayerIds(): Promise<Result> {
       succeed: [],
       failed: [],
     };
-    for (const id of arrayOfPages) {
-      const req = async (id): Promise<number[]> => {
-        // Sleep 3 seconds before request
-        await sleep(3000);
-        return await getPlayerIdsFromPage(id);
-      };
-      try {
-        const playerIds = await req(id).then((playerIds) => {
-          logger.info(
-            `Requested ids (${playerIds.length}): ${playerIds.slice(0, 5)}...`
-          );
-          return playerIds;
-        });
-        results.succeed.push(...playerIds);
-      } catch (err) {
-        logger.info(`There was an error while fetching player id "${id}"`);
-        results.failed.push(id);
+    let count = 0;
+    for (const group of groupedIds) {
+      // Wait four minutes between each group
+      if (count !== 0) await countdown(60 * 4);
+
+      for (const id of group) {
+        const req = async (id): Promise<number[]> => {
+          // Sleep 3 seconds before request
+          await sleep(3000);
+          return await getPlayerIdsFromPage(id);
+        };
+        try {
+          const playerIds = await req(id).then((playerIds) => {
+            logger.info(
+              `Requested ids (${playerIds.length}): ${playerIds.slice(0, 5)}...`
+            );
+            return playerIds;
+          });
+          results.succeed.push(...playerIds);
+        } catch (err) {
+          logger.info(`There was an error while fetching player id "${id}"`);
+          results.failed.push(id);
+        }
       }
+      count = count + 1;
     }
     return {
       succeed: results.succeed.sort((a, b) => a - b),

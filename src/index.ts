@@ -1,6 +1,6 @@
 const { getAmountOfPages, getTotalPlayers } = require("./services/page");
 const { useState } = require("./tools/state");
-const { getAllPlayerIds } = require("./services/players");
+const { getPlayerIdsByPage } = require("./services/players");
 
 async function prepareBaseState() {
   const [state, setState] = useState();
@@ -18,8 +18,8 @@ async function prepareBaseState() {
 async function init() {
   const [state, setState] = useState();
   await prepareBaseState();
-  const playerIds = await getAllPlayerIds();
-  setState({ playerIds });
+  const playerIdsByPage = await getPlayerIdsByPage();
+  setState({ playerIdsByPage });
 }
 
 init();

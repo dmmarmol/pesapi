@@ -1,8 +1,23 @@
 const { logger, logSeparator } = require("./logger");
 
+interface Player {
+  id: number;
+}
+
+interface State {
+  totalPages: number;
+  playerIdsByPage: { [i: string]: Player };
+  players: Player[];
+  totalPlayers: number;
+  lastPlayerId: number;
+  currentPage: number;
+  currentPlayerId: number;
+}
+type SetState = typeof setState;
+
 let state = {
   totalPages: 1,
-  playerIds: [],
+  playerIdsByPage: {},
   players: [],
   totalPlayers: 0,
   lastPlayerId: 0,
@@ -10,13 +25,13 @@ let state = {
   currentPlayerId: 0,
 };
 
-type State = typeof state;
-type SetState = typeof setState;
-
 logSeparator();
 logger.info("Initial State");
 logger.info(state);
-function setState(value: { [i in keyof typeof state]?: any }): State {
+
+function setState(
+  value: { [i in keyof typeof state]?: typeof state[i] }
+): State {
   const nextState = {
     ...state,
     ...value,

@@ -49,7 +49,7 @@ export const countdown = async (durationInSeconds: number) => {
 };
 
 const makeErrorHandler = () => {
-  let attempt = 0;
+  // let attempt = 0;
   const errorHandler = async function (error: AxiosError) {
     logger.info("ERROR");
     const { response, config } = error;
@@ -62,15 +62,15 @@ const makeErrorHandler = () => {
         )}`
       );
       logSeparator();
-      const seconds = minToSec(REQUEST_TIMEOUT_MINUTES + attempt / 6);
-      await countdown(seconds);
-      attempt = attempt + 1;
-      console.log(`attempt: ${attempt}`);
-      await AxiosInstance.request(config);
-      logSeparator();
+      // const seconds = minToSec(REQUEST_TIMEOUT_MINUTES + attempt / 6);
+      // await countdown(seconds);
+      // attempt = attempt + 1;
+      // console.log(`attempt: ${attempt}`);
+      // await AxiosInstance.request(config);
+      // logSeparator();
     }
     // reset the request attempts
-    attempt = 0;
+    // attempt = 0;
     // Do something with response error
     return Promise.reject(error);
   };
@@ -98,7 +98,6 @@ export async function request<T>(
   const { data } = await AxiosInstance.get(p, { params });
   logger.info(`Output was: ${JSON.stringify(data).slice(0, 30)}...`);
 
-  // await sleep(1000);
   return data;
 }
 

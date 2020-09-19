@@ -53,7 +53,7 @@ const makeErrorHandler = () => {
   const errorHandler = async function (error: AxiosError) {
     logger.info("ERROR");
     const { response, config } = error;
-    if (response.status === 429) {
+    if (response?.status === 429) {
       logger.info(`Error ${response.status} - ${response.statusText}`);
       logger.info(response.data);
       logger.info(

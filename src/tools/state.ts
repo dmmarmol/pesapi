@@ -38,8 +38,7 @@ function setState(
   };
   state = nextState;
   logSeparator();
-  logger.info("New State");
-  console.log(state);
+  logger.info("State Updated!");
   return state;
 }
 

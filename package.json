@@ -16,7 +16,7 @@
         "bluebird": "^3.5.1",
         "chalk": "^2.4.1",
         "cheerio": "1.0.0-rc.2",
-        "express": "4.16.2",
+        "express": "4.17.3",
         "lodash": "4.17.21",
         "multi-progress": "^2.0.0",
         "query-string": "6.1.0",

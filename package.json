@@ -39,6 +39,7 @@
         "babel-preset-stage-1": "6.24.1",
         "babel-runtime": "6.26.0",
         "cross-env": "5.1.0",
-        "eslint": "4.9.0"
+        "eslint": "4.9.0",
+        "nodemon": "^3.0.3"
     }
 }
